@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper to validate generic string keys and IDs
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Lead Validation
+    function isValidLead(data) {
+      return data.id is string && data.id.size() <= 250
+        && data.name is string && data.name.size() <= 1000
+        && data.category is string && data.category.size() <= 1000
+        && data.address is string && data.address.size() <= 2000
+        && data.city is string && data.city.size() <= 1000
+        && data.phone is string && data.phone.size() <= 250
+        && data.website is string && data.website.size() <= 2000
+        && data.status is string && data.status.size() <= 200
+        && (!('businessStatus' in data) || (data.businessStatus is string && data.businessStatus.size() <= 500))
+        && (!('mapsUrl' in data) || (data.mapsUrl is string && data.mapsUrl.size() <= 2000))
+        && (!('rating' in data) || (data.rating is number || data.rating is string))
+        && (!('userRatingsTotal' in data) || (data.userRatingsTotal is number || data.userRatingsTotal is string))
+        && (!('latitude' in data) || data.latitude is number)
+        && (!('longitude' in data) || data.longitude is number)
+        && (!('collectedAt' in data) || (data.collectedAt is string && data.collectedAt.size() <= 250))
+        && (!('normalizedPhone' in data) || (data.normalizedPhone is string && data.normalizedPhone.size() <= 250))
+        && (!('phoneType' in data) || (data.phoneType is string && data.phoneType.size() <= 250))
+        && (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 2000))
+        && (!('facebook' in data) || (data.facebook is string && data.facebook.size() <= 2000))
+        && (!('biography' in data) || (data.biography is string && data.biography.size() <= 10000))
+        && (!('origem' in data) || (data.origem is string && data.origem.size() <= 200))
+        && (!('linkedinUrl' in data) || (data.linkedinUrl is string && data.linkedinUrl.size() <= 2000))
+        && (!('linkedinCompanyId' in data) || (data.linkedinCompanyId is string && data.linkedinCompanyId.size() <= 250))
+        && (!('description' in data) || (data.description is string && data.description.size() <= 10000))
+        && (!('industry' in data) || (data.industry is string && data.industry.size() <= 1000))
+        && (!('location' in data) || (data.location is string && data.location.size() <= 1000))
+        && (!('followerCount' in data) || (data.followerCount is number))
+        && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 2000))
+        && (!('searchInput' in data) || (data.searchInput is string && data.searchInput.size() <= 1000))
+        && (!('optOut' in data) || data.optOut is bool)
+        && (!('consentRegistered' in data) || data.consentRegistered is bool)
+        && (!('consentDate' in data) || (data.consentDate is string && data.consentDate.size() <= 250))
+        && (!('secondaryCategories' in data) || data.secondaryCategories is list)
+        && (!('tags' in data) || data.tags is list)
+        && (!('gaps' in data) || data.gaps is list)
+        && (!('score' in data) || data.score is map)
+        && (!('lastInteraction' in data) || data.lastInteraction is map)
+        && (!('groundingLinks' in data) || data.groundingLinks is list)
+        && (!('usedCopyId' in data) || (data.usedCopyId is string && data.usedCopyId.size() <= 250))
+        && (!('usedCopyName' in data) || (data.usedCopyName is string && data.usedCopyName.size() <= 1000));
+    }
+
+    match /leads/{leadId} {
+      allow read: if true;
+      allow create, update: if isValidId(leadId) && isValidLead(request.resource.data);
+      allow delete: if isValidId(leadId);
+    }
+
+    // Site Template Validation
+    function isValidTemplate(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.niche is string && data.niche.size() <= 100
+        && data.url is string && data.url.size() <= 500;
+    }
+
+    match /templates/{templateId} {
+      allow read: if true;
+      allow create, update: if isValidId(templateId) && isValidTemplate(request.resource.data);
+      allow delete: if isValidId(templateId);
+    }
+
+    // Financial Project Validation
+    function isValidProject(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.companyName is string && data.companyName.size() <= 200
+        && data.niche is string && data.niche.size() <= 100
+        && data.value is number && data.value >= 0
+        && data.url is string && data.url.size() <= 500;
+    }
+
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create, update: if isValidId(projectId) && isValidProject(request.resource.data);
+      allow delete: if isValidId(projectId);
+    }
+
+    // Prospecting Copy Validation
+    function isValidCopy(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 500
+        && data.content is string && data.content.size() <= 10000
+        && data.channel is string && data.channel.size() <= 100
+        && data.status is string && data.status.size() <= 100
+        && data.sendCount is number
+        && data.responseCount is number;
+    }
+
+    match /copies/{copyId} {
+      allow read: if true;
+      allow create, update: if isValidId(copyId) && isValidCopy(request.resource.data);
+      allow delete: if isValidId(copyId);
+    }
+
+    // Lead Group Validation
+    function isValidGroup(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 500
+        && data.platform is string && (data.platform == 'Facebook' || data.platform == 'WhatsApp' || data.platform == 'Telegram' || data.platform == 'LinkedIn')
+        && data.niche is string && data.niche.size() <= 500
+        && data.link is string && data.link.size() <= 2000
+        && data.status is string && (data.status == 'Entrar' || data.status == 'Participando' || data.status == 'Publicado' || data.status == 'Gerou Lead')
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 10000))
+        && (!('postImage' in data) || (data.postImage is string && data.postImage.size() <= 1048576))
+        && (!('postVideo' in data) || (data.postVideo is string && data.postVideo.size() <= 1048576))
+        && (!('postText' in data) || (data.postText is string && data.postText.size() <= 20000))
+        && data.leadsGenerated is number
+        && data.salesCount is number
+        && data.salesValue is number
+        && (!('lastPublishedAt' in data) || (data.lastPublishedAt is string && data.lastPublishedAt.size() <= 250));
+    }
+
+    match /groups/{groupId} {
+      allow read: if true;
+      allow create, update: if isValidId(groupId) && isValidGroup(request.resource.data);
+      allow delete: if isValidId(groupId);
+    }
+  }
+}

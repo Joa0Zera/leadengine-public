@@ -1,0 +1,10 @@
+{
+  "name": "LeadEngine PRO - Tráfego Pago",
+  "description": "Sistema avançado de captação e inteligência de leads B2B com CRM integrado e análise de oportunidades via Gemini 3.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

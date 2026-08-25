@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2B Lead Engine Pro</title>
+    <script>
+        // Prevent SecurityError/blocked storage crashes in sandboxed iframe environments
+        (function() {
+            function createStorageMock() {
+                var storage = {};
+                return {
+                    getItem: function(key) {
+                        return key in storage ? storage[key] : null;
+                    },
+                    setItem: function(key, value) {
+                        storage[key] = String(value);
+                    },
+                    removeItem: function(key) {
+                        delete storage[key];
+                    },
+                    clear: function() {
+                        storage = {};
+                    },
+                    key: function(n) {
+                        var keys = Object.keys(storage);
+                        return keys[n] || null;
+                    },
+                    get length() {
+                        return Object.keys(storage).length;
+                    }
+                };
+            }
+
+            try {
+                var test = window.localStorage;
+                if (!test) throw new Error("localStorage is null");
+                // Test writing/reading
+                localStorage.setItem("__test_sandbox_storage", "1");
+                localStorage.removeItem("__test_sandbox_storage");
+            } catch (e) {
+                console.warn("localStorage is blocked or threw error, applying safe mock:", e);
+                try {
+                    Object.defineProperty(window, 'localStorage', {
+                        value: createStorageMock(),
+                        writable: true,
+                        configurable: true
+                    });
+                } catch (err) {
+                    console.error("Failed to define custom localStorage property:", err);
+                }
+            }
+
+            try {
+                var testSession = window.sessionStorage;
+                if (!testSession) throw new Error("sessionStorage is null");
+                sessionStorage.setItem("__test_sandbox_storage", "1");
+                sessionStorage.removeItem("__test_sandbox_storage");
+            } catch (e) {
+                console.warn("sessionStorage is blocked or threw error, applying safe mock:", e);
+                try {
+                    Object.defineProperty(window, 'sessionStorage', {
+                        value: createStorageMock(),
+                        writable: true,
+                        configurable: true
+                    });
+                } catch (err) {
+                    console.error("Failed to define custom sessionStorage property:", err);
+                }
+            }
+        })();
+
+        window.addEventListener('error', function(e) {
+            console.error("GLOBAL ERROR CAPTURED:", e);
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error("GLOBAL REJECTION CAPTURED:", e);
+        });
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

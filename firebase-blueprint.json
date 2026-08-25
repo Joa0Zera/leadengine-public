@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "Represents a prospective B2B client captured from Google Maps",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the lead" },
+        "name": { "type": "string", "description": "Business name" },
+        "category": { "type": "string", "description": "Primary business category" },
+        "secondaryCategories": { "type": "array", "description": "Secondary business categories" },
+        "address": { "type": "string", "description": "Physical address" },
+        "city": { "type": "string", "description": "City and State" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "website": { "type": "string", "description": "Website URL or status" },
+        "rating": { "type": "number", "description": "Google Maps rating" },
+        "userRatingsTotal": { "type": "number", "description": "Total number of reviews" },
+        "businessStatus": { "type": "string", "description": "Operational status" },
+        "mapsUrl": { "type": "string", "description": "Google Maps profile URL" },
+        "latitude": { "type": "number", "description": "Geographical latitude" },
+        "longitude": { "type": "number", "description": "Geographical longitude" },
+        "collectedAt": { "type": "string", "description": "ISO timestamp of extraction" },
+        "status": { "type": "string", "description": "CRM pipeline status" },
+        "tags": { "type": "array", "description": "CRM search/filter tags" },
+        "normalizedPhone": { "type": "string", "description": "E.164 normalized phone number" },
+        "phoneType": { "type": "string", "description": "Type of phone (whatsapp, fixo, celular)" },
+        "gaps": { "type": "array", "description": "Identified digital marketing gaps" },
+        "instagram": { "type": "string", "description": "Instagram profile URL or username" },
+        "facebook": { "type": "string", "description": "Facebook page URL" },
+        "biography": { "type": "string", "description": "Social media bio or business description" },
+        "origem": { "type": "string", "description": "Lead source channel" },
+        "linkedinUrl": { "type": "string", "description": "LinkedIn page URL" },
+        "linkedinCompanyId": { "type": "string", "description": "LinkedIn Company ID" },
+        "description": { "type": "string", "description": "LinkedIn company description" },
+        "industry": { "type": "string", "description": "LinkedIn industry/segment" },
+        "location": { "type": "string", "description": "LinkedIn city/state location" },
+        "followerCount": { "type": "number", "description": "LinkedIn follower count" },
+        "logoUrl": { "type": "string", "description": "LinkedIn logo image URL" },
+        "searchInput": { "type": "string", "description": "LinkedIn search keyword used" },
+        "score": { "type": "object", "description": "AI-generated lead analysis score and opportunities" },
+        "usedCopyId": { "type": "string", "description": "ID of the copywriting template used for outreach" },
+        "usedCopyName": { "type": "string", "description": "Name of the copywriting template used for outreach" }
+      },
+      "required": ["id", "name", "category", "address", "city", "phone", "website", "rating", "userRatingsTotal", "collectedAt", "status"]
+    },
+    "ProspectingCopy": {
+      "title": "ProspectingCopy",
+      "description": "Commercial message template used for B2B outreach and prospecting rotation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the copywriting template" },
+        "name": { "type": "string", "description": "Display name of the copy" },
+        "content": { "type": "string", "description": "Message text contents with placeholders" },
+        "channel": { "type": "string", "description": "Compatible communication channel", "enum": ["Google Maps", "Instagram", "Facebook", "LinkedIn", "WhatsApp"] },
+        "status": { "type": "string", "description": "Status of the copy", "enum": ["Ativa", "Inativa"] },
+        "sendCount": { "type": "number", "description": "How many times this copy was sent" },
+        "responseCount": { "type": "number", "description": "How many times this copy received a response" }
+      },
+      "required": ["id", "name", "content", "channel", "status", "sendCount", "responseCount"]
+    },
+    "SiteTemplate": {
+      "title": "SiteTemplate",
+      "description": "Premium landing page and website design templates for active prospecting",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID of the template" },
+        "niche": { "type": "string", "description": "Target niche of the template" },
+        "url": { "type": "string", "description": "Demo URL of the template" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["id", "niche", "url", "createdAt"]
+    },
+    "FinancialProject": {
+      "title": "FinancialProject",
+      "description": "Completed page sales and faturamento details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique project identifier" },
+        "companyName": { "type": "string", "description": "Name of the company that purchased the page" },
+        "niche": { "type": "string", "description": "Niche of the company" },
+        "value": { "type": "number", "description": "Billed amount for the website" },
+        "url": { "type": "string", "description": "Deployed website URL" },
+        "createdAt": { "type": "string", "description": "Date of sale" }
+      },
+      "required": ["id", "companyName", "niche", "value", "url", "createdAt"]
+    },
+    "LeadGroup": {
+      "title": "LeadGroup",
+      "description": "Networking group and post scheduling details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique group identifier" },
+        "name": { "type": "string", "description": "Name of the group" },
+        "platform": { "type": "string", "description": "The platform the group is hosted on", "enum": ["Facebook", "WhatsApp", "Telegram", "LinkedIn"] },
+        "niche": { "type": "string", "description": "The target niche of the group" },
+        "link": { "type": "string", "description": "The group's URL link" },
+        "status": { "type": "string", "description": "Status of the group", "enum": ["Entrar", "Participando", "Publicado", "Gerou Lead"] },
+        "notes": { "type": "string", "description": "Manual observations" },
+        "postImage": { "type": "string", "description": "Base64 encoded image or URL" },
+        "postVideo": { "type": "string", "description": "Base64 encoded video or URL" },
+        "postText": { "type": "string", "description": "Saved post copy content" },
+        "leadsGenerated": { "type": "number", "description": "Count of leads generated from this group" },
+        "salesCount": { "type": "number", "description": "Count of sales made from this group" },
+        "salesValue": { "type": "number", "description": "Monetary value of sales from this group" },
+        "lastPublishedAt": { "type": "string", "description": "ISO timestamp of last publication" }
+      },
+      "required": ["id", "name", "platform", "niche", "link", "status", "leadsGenerated", "salesCount", "salesValue"]
+    }
+  },
+  "firestore": {
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/Lead" },
+      "description": "Collection of B2B lead records and active pipeline contacts"
+    },
+    "/templates/{templateId}": {
+      "schema": { "$ref": "#/entities/SiteTemplate" },
+      "description": "Catalog of available demonstrative website templates"
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/FinancialProject" },
+      "description": "Sales logs and revenue tracker records"
+    },
+    "/copies/{copyId}": {
+      "schema": { "$ref": "#/entities/ProspectingCopy" },
+      "description": "Collection of commercial message templates used for B2B outreach rotation"
+    },
+    "/groups/{groupId}": {
+      "schema": { "$ref": "#/entities/LeadGroup" },
+      "description": "Collection of networking groups for manual prospecting"
+    }
+  }
+}
