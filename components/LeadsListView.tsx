@@ -207,6 +207,26 @@ const LeadsListView: React.FC<Props> = ({
     });
   };
 
+  const handleCopiarJSON = (lead: Lead) => {
+    const jsonData = {
+      nome: lead.name || 'Lead',
+      contato: lead.phone || '',
+      servico: lead.category || '',
+      cor_primaria: '#4a9eff',
+      cor_secundaria: '#2d5a7a',
+      cor_destaque: '#ffa500'
+    };
+
+    const jsonString = JSON.stringify([jsonData], null, 2);
+
+    navigator.clipboard.writeText(jsonString).then(() => {
+      setToastMessage('JSON do lead copiado para a área de transferência!');
+      setTimeout(() => setToastMessage(null), 3000);
+    }).catch(err => {
+      console.warn('Erro ao copiar JSON:', err);
+    });
+  };
+
   const handleSendVideoReactivation = (leadOrId: Lead | string) => {
     const lead = typeof leadOrId === 'string' ? leads.find(l => l.id === leadOrId) : leadOrId;
     if (!lead || !lead.phone || lead.phone === 'não disponível') return;
@@ -1447,6 +1467,20 @@ const LeadsListView: React.FC<Props> = ({
                         </div>
                       </div>
                     )}
+
+                    {/* Copiar JSON do lead (Nevion Hub) */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopiarJSON(lead);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 font-black uppercase py-2.5 px-3 rounded-xl text-[9px] transition-all shadow-sm cursor-pointer text-white bg-gradient-to-r from-[#4a9eff] to-[#6B35FF] hover:scale-[1.02] active:scale-95"
+                      title="Copiar dados do lead em JSON"
+                    >
+                      <Copy size={11} />
+                      Copiar JSON
+                    </button>
 
                     {/* Etapa status controls */}
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/20">
