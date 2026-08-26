@@ -68,8 +68,14 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
   const handleCopiarJSON = (lead: Lead) => {
     const jsonData = {
       nome: lead.name || 'Lead',
-      contato: lead.phone || '',
-      servico: lead.category || '',
+      contato: lead.phone || lead.normalizedPhone || '',
+      website: lead.website || '',
+      endereco: lead.address || lead.location || '',
+      servico: lead.category || lead.secondaryCategories?.join(', ') || '',
+      descricao: lead.description || lead.biography || '',
+      rating: lead.rating || 0,
+      reviews_count: lead.userRatingsTotal || 0,
+      horario: '', // não coletado pelo scraper atual, mantido para compatibilidade com o schema do Nevion Hub
       cor_primaria: '#4a9eff',
       cor_secundaria: '#2d5a7a',
       cor_destaque: '#ffa500'
@@ -78,7 +84,7 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
     const jsonString = JSON.stringify([jsonData], null, 2);
 
     navigator.clipboard.writeText(jsonString).then(() => {
-      showToast('JSON do lead copiado para a área de transferência!');
+      showToast('JSON com todas as informações copiado!');
     }).catch(err => {
       console.warn('Erro ao copiar JSON:', err);
     });
