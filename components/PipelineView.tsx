@@ -58,6 +58,17 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Copiar JSON modal state (edição de serviço/descrição/cores antes de copiar)
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [jsonModalLead, setJsonModalLead] = useState<Lead | null>(null);
+  const [jsonFormData, setJsonFormData] = useState({
+    servico: '',
+    descricao: '',
+    cor_primaria: '#4a9eff',
+    cor_secundaria: '#2d5a7a',
+    cor_destaque: '#ffa500'
+  });
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -66,27 +77,43 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
   };
 
   const handleCopiarJSON = (lead: Lead) => {
-    const jsonData = {
-      nome: lead.name || 'Lead',
-      contato: lead.phone || lead.normalizedPhone || '',
-      website: lead.website || '',
-      endereco: lead.address || lead.location || '',
+    setJsonModalLead(lead);
+    setJsonFormData({
       servico: lead.category || lead.secondaryCategories?.join(', ') || '',
       descricao: lead.description || lead.biography || '',
-      rating: lead.rating || 0,
-      reviews_count: lead.userRatingsTotal || 0,
-      horario: '', // não coletado pelo scraper atual, mantido para compatibilidade com o schema do Nevion Hub
       cor_primaria: '#4a9eff',
       cor_secundaria: '#2d5a7a',
       cor_destaque: '#ffa500'
+    });
+    setShowJsonModal(true);
+  };
+
+  const handleCopiarJSONCompleto = () => {
+    if (!jsonModalLead) return;
+
+    const jsonData = {
+      nome: jsonModalLead.name || 'Lead',
+      contato: jsonModalLead.phone || jsonModalLead.normalizedPhone || '',
+      website: jsonModalLead.website || '',
+      endereco: jsonModalLead.address || jsonModalLead.location || '',
+      servico: jsonFormData.servico || 'Não especificado',
+      descricao: jsonFormData.descricao || '',
+      rating: jsonModalLead.rating || 0,
+      reviews_count: jsonModalLead.userRatingsTotal || 0,
+      horario: '', // não coletado pelo scraper atual, mantido para compatibilidade com o schema do Nevion Hub
+      cor_primaria: jsonFormData.cor_primaria,
+      cor_secundaria: jsonFormData.cor_secundaria,
+      cor_destaque: jsonFormData.cor_destaque
     };
 
     const jsonString = JSON.stringify([jsonData], null, 2);
 
     navigator.clipboard.writeText(jsonString).then(() => {
-      showToast('JSON com todas as informações copiado!');
+      showToast('JSON com informações completas copiado!');
+      setShowJsonModal(false);
     }).catch(err => {
       console.warn('Erro ao copiar JSON:', err);
+      showToast('Erro ao copiar JSON');
     });
   };
 
@@ -1115,6 +1142,119 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
         <div className="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-sans font-bold z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <CheckCircle size={14} className="text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* MODAL: Editar dados antes de copiar JSON (Nevion Hub) */}
+      {showJsonModal && jsonModalLead && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowJsonModal(false)}>
+          <div
+            className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-cyan-500/30 p-8 max-w-2xl w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-white mb-2">
+                📋 Editar Informações - {jsonModalLead.name}
+              </h3>
+              <p className="text-gray-400 text-sm">Preencha as informações antes de copiar o JSON</p>
+            </div>
+
+            {/* Formulário */}
+            <div className="space-y-6">
+
+              {/* Serviço */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  🏷️ Serviço/Produto
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Harmonização Facial, Estética, Moda..."
+                  value={jsonFormData.servico}
+                  onChange={(e) => setJsonFormData({ ...jsonFormData, servico: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 transition"
+                />
+              </div>
+
+              {/* Descrição */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  📝 Descrição da Empresa
+                </label>
+                <textarea
+                  placeholder="Ex: Especialista em harmonização facial com mais de 10 anos de experiência..."
+                  value={jsonFormData.descricao}
+                  onChange={(e) => setJsonFormData({ ...jsonFormData, descricao: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 transition resize-none"
+                />
+              </div>
+
+              {/* Cores */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-4">
+                  🎨 Cores da Marca
+                </label>
+                <div className="grid grid-cols-3 gap-4">
+
+                  {/* Cor Primária */}
+                  <div className="flex flex-col items-center">
+                    <input
+                      type="color"
+                      value={jsonFormData.cor_primaria}
+                      onChange={(e) => setJsonFormData({ ...jsonFormData, cor_primaria: e.target.value })}
+                      className="w-16 h-16 rounded-lg cursor-pointer border-2 border-cyan-500/50 hover:border-cyan-500"
+                    />
+                    <p className="text-xs text-gray-400 mt-2">Primária</p>
+                    <p className="text-xs text-cyan-400 font-mono">{jsonFormData.cor_primaria}</p>
+                  </div>
+
+                  {/* Cor Secundária */}
+                  <div className="flex flex-col items-center">
+                    <input
+                      type="color"
+                      value={jsonFormData.cor_secundaria}
+                      onChange={(e) => setJsonFormData({ ...jsonFormData, cor_secundaria: e.target.value })}
+                      className="w-16 h-16 rounded-lg cursor-pointer border-2 border-purple-500/50 hover:border-purple-500"
+                    />
+                    <p className="text-xs text-gray-400 mt-2">Secundária</p>
+                    <p className="text-xs text-purple-400 font-mono">{jsonFormData.cor_secundaria}</p>
+                  </div>
+
+                  {/* Cor Destaque */}
+                  <div className="flex flex-col items-center">
+                    <input
+                      type="color"
+                      value={jsonFormData.cor_destaque}
+                      onChange={(e) => setJsonFormData({ ...jsonFormData, cor_destaque: e.target.value })}
+                      className="w-16 h-16 rounded-lg cursor-pointer border-2 border-orange-500/50 hover:border-orange-500"
+                    />
+                    <p className="text-xs text-gray-400 mt-2">Destaque</p>
+                    <p className="text-xs text-orange-400 font-mono">{jsonFormData.cor_destaque}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3 mt-8">
+              <button
+                type="button"
+                onClick={handleCopiarJSONCompleto}
+                className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 active:scale-95"
+              >
+                ✅ Copiar JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowJsonModal(false)}
+                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition"
+              >
+                ❌ Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
