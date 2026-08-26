@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, writeBatch, query, where, limit } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import firebaseConfig from './firebase-applet-config.json';
 import { Lead, SiteTemplate, FinancialProject, ProspectingCopy, LeadGroup } from './types';
@@ -101,6 +101,29 @@ export async function dbFetchLeads(): Promise<Lead[]> {
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, LEADS_COL);
     return []; // fallback but unreachable since handleFirestoreError throws
+  }
+}
+
+// Find a single lead by phone (tries exact phone match, then normalizedPhone)
+export async function dbFindLeadByPhone(phone: string): Promise<Lead | null> {
+  const normalizedPhone = phone.replace(/\D/g, '');
+  try {
+    const leadsRef = collection(db, LEADS_COL);
+
+    const byPhone = await getDocs(query(leadsRef, where('phone', '==', phone), limit(1)));
+    if (!byPhone.empty) {
+      return byPhone.docs[0].data() as Lead;
+    }
+
+    const byNormalizedPhone = await getDocs(query(leadsRef, where('normalizedPhone', '==', normalizedPhone), limit(1)));
+    if (!byNormalizedPhone.empty) {
+      return byNormalizedPhone.docs[0].data() as Lead;
+    }
+
+    return null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, LEADS_COL);
+    return null; // unreachable, handleFirestoreError throws
   }
 }
 

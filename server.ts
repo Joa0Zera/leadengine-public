@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
 import { Lead, GroundingLink } from "./types";
+import { dbFindLeadByPhone } from "./firebase";
 
 // Catch-all safety net for server process errors
 process.on("unhandledRejection", (reason, promise) => {
@@ -118,6 +119,40 @@ async function startServer() {
   });
 
   // API Routes
+
+  // GET /api/lead-by-phone?phone=+5585999999999
+  app.get("/api/lead-by-phone", async (req, res) => {
+    const phone = req.query.phone as string;
+
+    if (!phone) {
+      return res.status(400).json({ error: "Phone parameter is required" });
+    }
+
+    try {
+      const lead = await dbFindLeadByPhone(phone);
+
+      if (!lead) {
+        return res.status(404).json({ error: "Lead not found" });
+      }
+
+      res.json({
+        id: lead.id,
+        name: lead.name || "",
+        phone: lead.phone || phone,
+        website: lead.website || "",
+        address: lead.address || "",
+        category: lead.category || "",
+        description: lead.description || lead.biography || "",
+        rating: lead.rating || 0,
+        userRatingsTotal: lead.userRatingsTotal || 0,
+        secondaryCategories: lead.secondaryCategories || []
+      });
+    } catch (error: any) {
+      console.error("Erro ao buscar lead por telefone:", error);
+      res.status(500).json({ error: error.message || "Erro interno ao buscar lead." });
+    }
+  });
+
   app.post("/api/leads/search", async (req, res) => {
     const { niche, city, radius } = req.body;
     
