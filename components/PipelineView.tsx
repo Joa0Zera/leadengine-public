@@ -58,15 +58,14 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Copiar JSON modal state (edição de serviço/descrição/cores antes de copiar)
+  // Copiar JSON modal state (edição de serviço/descrição/Google Meu Negócio/cores antes de copiar)
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [jsonModalLead, setJsonModalLead] = useState<Lead | null>(null);
   const [jsonFormData, setJsonFormData] = useState({
     servico: '',
     descricao: '',
-    cor_primaria: '#4a9eff',
-    cor_secundaria: '#2d5a7a',
-    cor_destaque: '#ffa500'
+    google_meu_negocio: '',
+    cor_descricao: 'azul profissional'
   });
 
   const showToast = (msg: string) => {
@@ -81,9 +80,8 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
     setJsonFormData({
       servico: lead.category || lead.secondaryCategories?.join(', ') || '',
       descricao: lead.description || lead.biography || '',
-      cor_primaria: '#4a9eff',
-      cor_secundaria: '#2d5a7a',
-      cor_destaque: '#ffa500'
+      google_meu_negocio: '',
+      cor_descricao: 'azul profissional'
     });
     setShowJsonModal(true);
   };
@@ -98,12 +96,11 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
       endereco: jsonModalLead.address || jsonModalLead.location || '',
       servico: jsonFormData.servico || 'Não especificado',
       descricao: jsonFormData.descricao || '',
+      google_meu_negocio: jsonFormData.google_meu_negocio || '',
       rating: jsonModalLead.rating || 0,
       reviews_count: jsonModalLead.userRatingsTotal || 0,
       horario: '', // não coletado pelo scraper atual, mantido para compatibilidade com o schema do Nevion Hub
-      cor_primaria: jsonFormData.cor_primaria,
-      cor_secundaria: jsonFormData.cor_secundaria,
-      cor_destaque: jsonFormData.cor_destaque
+      cor_descricao: jsonFormData.cor_descricao || 'azul profissional'
     };
 
     const jsonString = JSON.stringify([jsonData], null, 2);
@@ -1191,49 +1188,33 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
                 />
               </div>
 
-              {/* Cores */}
+              {/* Google Meu Negócio */}
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-4">
-                  🎨 Cores da Marca
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  🏢 Informações do Google Meu Negócio
                 </label>
-                <div className="grid grid-cols-3 gap-4">
+                <textarea
+                  placeholder="Cole aqui tudo do seu perfil do Google Meu Negócio (avaliações, fotos, descrição, horário, etc)..."
+                  value={jsonFormData.google_meu_negocio}
+                  onChange={(e) => setJsonFormData({ ...jsonFormData, google_meu_negocio: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 transition resize-none text-sm"
+                />
+              </div>
 
-                  {/* Cor Primária */}
-                  <div className="flex flex-col items-center">
-                    <input
-                      type="color"
-                      value={jsonFormData.cor_primaria}
-                      onChange={(e) => setJsonFormData({ ...jsonFormData, cor_primaria: e.target.value })}
-                      className="w-16 h-16 rounded-lg cursor-pointer border-2 border-cyan-500/50 hover:border-cyan-500"
-                    />
-                    <p className="text-xs text-gray-400 mt-2">Primária</p>
-                    <p className="text-xs text-cyan-400 font-mono">{jsonFormData.cor_primaria}</p>
-                  </div>
-
-                  {/* Cor Secundária */}
-                  <div className="flex flex-col items-center">
-                    <input
-                      type="color"
-                      value={jsonFormData.cor_secundaria}
-                      onChange={(e) => setJsonFormData({ ...jsonFormData, cor_secundaria: e.target.value })}
-                      className="w-16 h-16 rounded-lg cursor-pointer border-2 border-purple-500/50 hover:border-purple-500"
-                    />
-                    <p className="text-xs text-gray-400 mt-2">Secundária</p>
-                    <p className="text-xs text-purple-400 font-mono">{jsonFormData.cor_secundaria}</p>
-                  </div>
-
-                  {/* Cor Destaque */}
-                  <div className="flex flex-col items-center">
-                    <input
-                      type="color"
-                      value={jsonFormData.cor_destaque}
-                      onChange={(e) => setJsonFormData({ ...jsonFormData, cor_destaque: e.target.value })}
-                      className="w-16 h-16 rounded-lg cursor-pointer border-2 border-orange-500/50 hover:border-orange-500"
-                    />
-                    <p className="text-xs text-gray-400 mt-2">Destaque</p>
-                    <p className="text-xs text-orange-400 font-mono">{jsonFormData.cor_destaque}</p>
-                  </div>
-                </div>
+              {/* Descrição de Cores */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  🎨 Descrição das Cores
+                </label>
+                <textarea
+                  placeholder="Ex: Roxo escuro com branco, ou Azul marinho com dourado, ou Preto com rosa..."
+                  value={jsonFormData.cor_descricao}
+                  onChange={(e) => setJsonFormData({ ...jsonFormData, cor_descricao: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-orange-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 transition resize-none text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-2">💡 Dica: Descreva as cores como você gostaria que aparecessem na página</p>
               </div>
             </div>
 
