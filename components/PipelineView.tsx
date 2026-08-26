@@ -28,7 +28,8 @@ import {
   ExternalLink,
   Undo,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Copy
 } from 'lucide-react';
 
 interface Props {
@@ -62,6 +63,25 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
+  };
+
+  const handleCopiarJSON = (lead: Lead) => {
+    const jsonData = {
+      nome: lead.name || 'Lead',
+      contato: lead.phone || '',
+      servico: lead.category || '',
+      cor_primaria: '#4a9eff',
+      cor_secundaria: '#2d5a7a',
+      cor_destaque: '#ffa500'
+    };
+
+    const jsonString = JSON.stringify([jsonData], null, 2);
+
+    navigator.clipboard.writeText(jsonString).then(() => {
+      showToast('JSON do lead copiado para a área de transferência!');
+    }).catch(err => {
+      console.warn('Erro ao copiar JSON:', err);
+    });
   };
 
   const handleReturnToProspecting = (lead: Lead) => {
@@ -861,6 +881,21 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
                               </span>
                             )}
                           </div>
+
+                          {/* Copiar JSON do lead (somente na coluna de Desenvolvimento) */}
+                          {stage.status === 'PROJETO_EM_DESENVOLVIMENTO' && (
+                            <div className="pt-2 border-t border-slate-800/40" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => handleCopiarJSON(lead)}
+                                className="w-full text-[10px] font-black text-white bg-gradient-to-r from-[#4a9eff] to-[#6B35FF] rounded-lg py-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 font-sans"
+                                title="Copiar dados do lead em JSON"
+                              >
+                                <Copy size={11} />
+                                Copiar JSON
+                              </button>
+                            </div>
+                          )}
 
                           {/* Botão de devolução ao CRM de prospecção */}
                           <div className="pt-2 border-t border-slate-800/40 flex justify-end" onClick={(e) => e.stopPropagation()}>
