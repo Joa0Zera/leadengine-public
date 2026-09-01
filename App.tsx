@@ -655,7 +655,7 @@ const App: React.FC = () => {
           />
         );
       case AppSection.PIPELINE:
-        return <PipelineView leads={leads} onUpdateStatus={handleUpdateLeadStatus} onUpdateLead={handleUpdateLead} />;
+        return <PipelineView leads={leads} onUpdateStatus={handleUpdateLeadStatus} onUpdateLead={handleUpdateLead} onImportLeads={handleImportLeads} />;
       case AppSection.CRIAR_PROPOSTA:
         return <CriarPropostaView onImportLeads={handleImportLeads} onNavigate={setActiveSection} />;
       case AppSection.SDR_AGENT:

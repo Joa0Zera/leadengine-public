@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lead, LeadStatus, ClosingStatus } from '../types';
-import { detectarTipoContato, calcularLeadScore, detectarGaps } from '../helpers';
+import { detectarTipoContato, calcularLeadScore, detectarGaps, normalizarTelefone } from '../helpers';
 import LeadDetailModal from './LeadDetailModal';
 import { 
   MoreHorizontal, 
@@ -29,24 +29,37 @@ import {
   Undo,
   Download,
   FileSpreadsheet,
-  Copy
+  Copy,
+  Plus
 } from 'lucide-react';
 
 interface Props {
   leads: Lead[];
   onUpdateStatus: (id: string, status: LeadStatus) => void;
   onUpdateLead: (updatedLead: Lead) => void;
+  onImportLeads: (newLeads: Lead[]) => void;
 }
 
-const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) => {
+const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead, onImportLeads }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activePipeline, setActivePipeline] = useState<'OUTBOUND' | 'CLOSING'>('OUTBOUND');
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const selectedLead = leads.find(l => l.id === selectedLeadId) || null;
-  
+
   // Mandatory Loss Reason state
   const [lossReasonLead, setLossReasonLead] = useState<Lead | null>(null);
   const [selectedLossReason, setSelectedLossReason] = useState('');
+
+  // Add Lead Manually state
+  const [showAddLeadModal, setShowAddLeadModal] = useState(false);
+  const [novoLead, setNovoLead] = useState({
+    nome: '',
+    telefone: '',
+    email: '',
+    cidade: '',
+    status: 'NOVO' as LeadStatus,
+    descricao: ''
+  });
 
   // Video Reactivation state
   const [reactivationModal, setReactivationModal] = useState<{
@@ -73,6 +86,56 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
+  };
+
+  const handleSalvarNovoLead = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!novoLead.nome.trim() || !novoLead.telefone.trim()) {
+      showToast('Preencha nome e telefone antes de salvar.');
+      return;
+    }
+
+    const normPhone = normalizarTelefone(novoLead.telefone);
+
+    const lead: Lead = {
+      id: 'manual-' + Date.now(),
+      name: novoLead.nome.trim(),
+      category: 'Geral',
+      secondaryCategories: [],
+      address: novoLead.cidade || 'Endereço não informado',
+      city: novoLead.cidade,
+      phone: novoLead.telefone,
+      website: 'não disponível',
+      rating: 0,
+      userRatingsTotal: 0,
+      businessStatus: 'OPERATIONAL',
+      mapsUrl: '',
+      latitude: 0,
+      longitude: 0,
+      collectedAt: new Date().toISOString(),
+      status: novoLead.status,
+      tags: ['Manual'],
+      gaps: [],
+      origem: 'Manual',
+      email: novoLead.email || undefined,
+      description: novoLead.descricao || undefined,
+      normalizedPhone: normPhone || undefined,
+      phoneType: normPhone ? (detectarTipoContato(normPhone) as any) : 'desconhecido',
+      timeline: [
+        {
+          id: 'timeline-manual-' + Date.now(),
+          date: new Date().toLocaleDateString('pt-BR'),
+          title: 'Lead Adicionado Manualmente',
+          description: 'Lead cadastrado manualmente no Pipeline.'
+        }
+      ]
+    };
+
+    onImportLeads([lead]);
+    showToast(`Lead "${lead.name}" adicionado com sucesso!`);
+    setShowAddLeadModal(false);
+    setNovoLead({ nome: '', telefone: '', email: '', cidade: '', status: 'NOVO', descricao: '' });
   };
 
   const handleCopiarJSON = (lead: Lead) => {
@@ -616,6 +679,16 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
               Exportar CSV
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setShowAddLeadModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/30 cursor-pointer active:scale-95"
+            title="Adicionar Lead Manualmente"
+          >
+            <Plus size={14} className="shrink-0" />
+            Adicionar Lead
+          </button>
         </div>
       </div>
 
@@ -1139,6 +1212,121 @@ const PipelineView: React.FC<Props> = ({ leads, onUpdateStatus, onUpdateLead }) 
         <div className="fixed bottom-6 right-6 bg-slate-900 border border-slate-800 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-sans font-bold z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <CheckCircle size={14} className="text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* MODAL: Adicionar Lead Manualmente */}
+      {showAddLeadModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowAddLeadModal(false)}>
+          <div
+            className="bg-slate-900 border border-slate-800 rounded-[2rem] max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 font-sans"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-lg text-slate-100 uppercase tracking-wide flex items-center gap-2">
+                <Plus size={18} className="text-emerald-400" /> Adicionar Lead Manualmente
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddLeadModal(false)}
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSalvarNovoLead} className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 block">Nome *</label>
+                <input
+                  type="text"
+                  required
+                  value={novoLead.nome}
+                  onChange={(e) => setNovoLead({ ...novoLead, nome: e.target.value })}
+                  placeholder="Nome completo"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 font-bold outline-none focus:border-emerald-500/50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 block">Telefone *</label>
+                <input
+                  type="tel"
+                  required
+                  value={novoLead.telefone}
+                  onChange={(e) => setNovoLead({ ...novoLead, telefone: e.target.value })}
+                  placeholder="(71) 99940-7599"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 font-bold outline-none focus:border-emerald-500/50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 block">Email</label>
+                <input
+                  type="email"
+                  value={novoLead.email}
+                  onChange={(e) => setNovoLead({ ...novoLead, email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 font-bold outline-none focus:border-emerald-500/50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 block">Cidade</label>
+                <input
+                  type="text"
+                  value={novoLead.cidade}
+                  onChange={(e) => setNovoLead({ ...novoLead, cidade: e.target.value })}
+                  placeholder="Salvador"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 font-bold outline-none focus:border-emerald-500/50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 block">Status *</label>
+                <select
+                  required
+                  value={novoLead.status}
+                  onChange={(e) => setNovoLead({ ...novoLead, status: e.target.value as LeadStatus })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 font-bold outline-none focus:border-emerald-500/50"
+                >
+                  <option value="NOVO">NOVO LEAD</option>
+                  <option value="CONTATADO">CONTATADO</option>
+                  <option value="DEMONSTROU_INTERESSE">DEMONSTROU INTERESSE</option>
+                  <option value="NAO_RESPONDEU">NÃO RESPONDEU</option>
+                  <option value="FECHADO">FECHADO (GANHO)</option>
+                  <option value="PERDIDO">PERDIDO</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 block">Descrição</label>
+                <textarea
+                  value={novoLead.descricao}
+                  onChange={(e) => setNovoLead({ ...novoLead, descricao: e.target.value })}
+                  placeholder="Detalhes sobre o interesse..."
+                  rows={3}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-200 font-medium outline-none focus:border-emerald-500/50 resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddLeadModal(false)}
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-950/20 cursor-pointer"
+                >
+                  Salvar Lead
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

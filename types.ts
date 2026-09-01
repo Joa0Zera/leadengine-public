@@ -88,6 +88,7 @@ export interface Lead {
   consentDate?: string;
   instagram?: string;
   facebook?: string;
+  email?: string;
   biography?: string;
   origem?: 'Google Maps' | 'Facebook' | 'Instagram' | 'WhatsApp' | 'LinkedIn' | 'Manual';
   linkedinUrl?: string;
