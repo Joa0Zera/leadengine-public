@@ -1,20 +1,28 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# LeadEngine
 
-# Run and deploy your AI Studio app
+CRM de prospecção próprio, construído para sustentar operações de outreach em escala sem levar bloqueio por spam no WhatsApp.
 
-This contains everything you need to run your app locally.
+> **EN**: In-house prospecting CRM built to run outreach at scale while avoiding WhatsApp spam detection.
 
-View your app in AI Studio: https://ai.studio/apps/380e5510-3d29-4425-ba08-381fb2225e14
+## O problema que resolve
 
-## Run Locally
+Disparar a mesma mensagem centenas de vezes por dia é a forma mais rápida de ter um número bloqueado. O LeadEngine gerencia leads e mensagens de forma que cada disparo pareça humano e único, além de centralizar o pipeline de prospecção num só lugar.
 
-**Prerequisites:**  Node.js
+## Funcionalidades
 
+- **Pipeline de leads** com adição manual e busca por telefone (`GET /api/lead-by-phone`)
+- **Upload de leads via CSV**, alimentado por scraping do Google Maps
+- **Rotação de copy**: 6 variações otimizadas de mensagem (1A/1B/1C/2A/2B/2C) alternadas automaticamente por lead
+- **Lógica de rotação diária** para distribuir o volume de disparos e reduzir o risco de bloqueio
+- Rastreamento de taxa de resposta e conversão por lead
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Stack
+
+- **React + Vite** (frontend)
+- **Firebase** — Firestore como banco, com regras de segurança dedicadas (`firestore.rules`)
+- **Gemini API** — usada no processamento/geração de conteúdo do CRM (`geminiService.ts`)
+- Servidor Node (`server.ts`) para as rotas de API
+
+## Status
+
+Em uso ativo, com desenvolvimento contínuo — últimas entregas incluem adição manual de lead no pipeline e busca de lead por telefone.
